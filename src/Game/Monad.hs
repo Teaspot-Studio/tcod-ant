@@ -24,13 +24,16 @@ module Game.Monad(
   , holdKeyAppHost
   , getPostBuild
   , performPostBuild
+  , module Control.Monad.Random.Strict
   ) where
 
 import Control.Concurrent
+import Control.Concurrent.STM
 import Control.Concurrent.Thread.Delay as TD
 import Control.Monad.Fix
 import Control.Monad.IO.Class
 import Control.Monad.Random.Strict
+import Control.Monad.STM
 import Control.Monad.Reader
 import Control.Monad.Trans.Random.Strict
 import Data.IORef
@@ -94,14 +97,20 @@ class (
   -- | Signall to game that we need a shutdown
   gracefullExit :: Event t a -> m ()
 
-newtype Env = Env {
-  envConfig :: Config
+  -- | Put action in render queue
+  render :: Event t (IO ()) -> m ()
+
+data Env = Env {
+  envConfig      :: Config
+, envRenderQueue :: TQueue (IO ())
 }
 
 newEnv :: MonadIO m => Config -> m Env
-newEnv cfg =
+newEnv cfg = do
+  rq <- liftIO newTQueueIO
   pure Env {
       envConfig = cfg
+    , envRenderQueue = rq
     }
 
 -- | Internal monad that implements 'GameMonad' API
@@ -199,21 +208,38 @@ instance MonadGame Spider GameM where
   gracefullExit e = void $ switchAppHost (pure $ infoQuit [void e]) never
   {-# INLINE gracefullExit #-}
 
+  render e = do
+    q <- GameM $ asks envRenderQueue
+    performEvent_ $ ffor e $ liftIO . atomically . writeTQueue q
+  {-# INLINE render #-}
+
 -- | Run the game monad, blocks until exit event occur.
 runGameM :: Env -> GameM () -> IO ()
 runGameM env m = withSystem $ runSpiderHost . hostApp . flip runReaderT env . unGameM $ do
   (exitE, exitFire) <- newExternalEvent
+  q <- GameM $ asks envRenderQueue
   _ <- liftIO $ forkOS $ do
     consoleInitRoot 80 50 "Ant problem" False RendererSDL
     unlessM consoleIsWindowClosed $ do
       _ <- systemCheckForEvent ([EventKeyPress] :: [TCODEvent])
-      consoleClear rootConsole
-      consolePutChar rootConsole 40 25 '@' BackgroundDefault
+      --consoleClear rootConsole
+      sequence_ =<< atomically (readTQueueAll q)
       consoleFlush
     _ <- exitFire ()
     pure ()
   gracefullExit exitE
   m
+
+-- | Read all available data from queue
+readTQueueAll :: TQueue a -> STM [a]
+readTQueueAll q = go []
+  where
+    go !acc = do
+      res <- isEmptyTQueue q
+      if res then pure $ reverse acc
+        else do
+          a <- readTQueue q
+          go (a : acc)
 
 -- | Do action until given condition predicate doesn't return 'False'
 unlessM :: Monad m => m Bool -> m () -> m ()
