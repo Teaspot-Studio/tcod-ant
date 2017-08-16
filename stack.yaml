@@ -37,6 +37,7 @@ resolver: lts-9.0
 # will not be run. This is useful for tweaking upstream packages.
 packages:
 - '.'
+- '../tcod-haskell'
 - location:
     git: https://github.com/bennofs/reflex-host.git
     commit: 219c162bec3c996ec59acde2fba92a666ccf0c4f
@@ -54,10 +55,12 @@ extra-deps:
 - ref-tf-0.4.0.1
 - repa-3.4.1.2
 - syb-0.6
-- tcod-haskell-0.1.0.0
+- tcod-haskell-0.2.0.0
 
 # Override default flag values for local packages and extra-deps
-flags: {}
+flags:
+  reflex:
+    specialize-to-spidertimeline-global: true
 
 # Extra package databases containing global packages
 extra-package-dbs: []
