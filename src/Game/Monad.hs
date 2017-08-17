@@ -25,6 +25,9 @@ module Game.Monad(
   , getPostBuild
   , performPostBuild
   , module Control.Monad.Random.Strict
+  , updatedWithInit
+  , dynamicDelay
+  , (<>)
   ) where
 
 import Control.Concurrent
@@ -33,10 +36,11 @@ import Control.Concurrent.Thread.Delay as TD
 import Control.Monad.Fix
 import Control.Monad.IO.Class
 import Control.Monad.Random.Strict
-import Control.Monad.STM
 import Control.Monad.Reader
+import Control.Monad.STM
 import Control.Monad.Trans.Random.Strict
 import Data.IORef
+import Data.Monoid
 import Data.Text (Text, pack)
 import Data.Time
 import GHC.Event hiding (Event)
@@ -99,6 +103,23 @@ class (
 
   -- | Put action in render queue
   render :: Event t (IO ()) -> m ()
+
+-- | Same as 'updated', but fires at post build with initial value
+updatedWithInit :: MonadGame t m => Dynamic t a -> m (Event t a)
+updatedWithInit d = do
+  buildE <- getPostBuild
+  pure $ leftmost [updated d, current d `tag` buildE]
+
+-- | Delay sequence of dynamic values by given value
+dynamicDelay :: MonadGame t m => a -> Dynamic t a -> m (Dynamic t a)
+dynamicDelay a0 d = do
+  d0 <- sample . current $ d
+  r <- liftIO $ newIORef d0
+  eu <- performEvent $ ffor (updated d) $ \v -> do
+    v' <- liftIO $ readIORef r
+    liftIO $ writeIORef r v
+    pure v'
+  holdDyn a0 eu
 
 data Env = Env {
   envConfig      :: Config

@@ -20,7 +20,9 @@ library
     Game
     Game.Config
     Game.Map
+    Game.Mind
     Game.Monad
+    Game.Player
   build-depends:
       base                      >= 4.7      && < 5
     , aeson                     >= 1.1      && < 1.3
