@@ -16,12 +16,13 @@ runGame = do
     let
       mw = 40
       mh = 40
-    tickE <- tickEvery 1
+    tickE <- tickEvery 0.5
     PlayerOutputs{..} <- runPlayer PlayerConfig {
-        playerMaxHunger = 5
+        playerMaxHunger = 10
       , playerFoodEaten = mapPlayerConsume
       , playerInitPosition = (mw `div` 2, mh `div` 2)
       , playerInitRotation = DirUp
+      , playerPosValidate = mapPlayerPosValidate
       , playerBlocked = mapPlayerBlocked
       , playerFoodSense = mapPlayerSensed
       , playerTurn = tickE
@@ -36,6 +37,7 @@ runGame = do
       , mapPlayerPos = playerPosition
       , mapPlayerRot = playerRotation
       , mapPlayerDead = playerDead
+      , mapFoodSaturation = 5
       }
     let labelsX = 48
         labelsW = 5

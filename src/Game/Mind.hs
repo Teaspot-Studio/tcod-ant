@@ -25,7 +25,7 @@ applyDirection d (x, y) = case d of
 -- | Which rotation changes player can do
 data PlayerRotation = PlayerRotLeft | PlayerRotRight
   deriving (Eq, Ord, Show)
-  
+
 -- | Rotate direction according to player rotation change
 applyRotation :: PlayerRotation -> Direction -> Direction
 applyRotation pr d = case pr of
@@ -55,4 +55,4 @@ data MindInput t = MindInput {
 -- | Peform decision making, the resulted dynamic is sampled at simulation
 -- speed to make turn based execution.
 mind :: MonadGame t m => MindInput t -> m (Dynamic t PlayerAction)
-mind _ = pure $ pure PlayerDoNothing
+mind _ = pure $ pure PlayerMove

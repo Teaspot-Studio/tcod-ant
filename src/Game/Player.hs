@@ -24,6 +24,8 @@ data PlayerConfig t = PlayerConfig {
 , playerInitPosition :: (Int, Int)
 -- | Initial player rotation in world
 , playerInitRotation :: Direction
+-- | Validator of position of player in world
+, playerPosValidate :: (Int, Int) -> Bool
 -- | Is movement forward is allowed?
 , playerBlocked :: Dynamic t Bool
 -- | Is food is in front of player?
@@ -58,13 +60,12 @@ runPlayer PlayerConfig{..} = mdo
         a <- actionD
         case a of
           PlayerMove -> do
-            isBlocked <- playerBlocked
-            if isBlocked then pure Nothing else do
-              p <- pos
-              d <- rot
-              pure $ Just $ applyDirection d p
+            p <- pos
+            d <- rot
+            let p' = applyDirection d p
+            pure $ if playerPosValidate p' then Just p' else Nothing
           _ -> pure Nothing
-  pos <- holdDyn playerInitPosition $ fmapMaybe id $ tagPromptlyDyn posNew playerTurn
+  pos <- holdDyn playerInitPosition $ fmapMaybe id $ current posNew `tag` playerTurn
   -- Calclulate rotation
   let rotNew = do
         a <- actionD
@@ -73,7 +74,7 @@ runPlayer PlayerConfig{..} = mdo
             d <- rot
             pure $ Just $ applyRotation r d
           _ -> pure Nothing
-  rot <- holdDyn playerInitRotation $ fmapMaybe id $ tagPromptlyDyn rotNew playerTurn
+  rot <- holdDyn playerInitRotation $ fmapMaybe id $ current rotNew `tag` playerTurn
   -- Decision making
   mindAction <- mind MindInput {
       mindBlocked = playerBlocked
