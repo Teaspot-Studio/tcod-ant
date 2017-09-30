@@ -56,4 +56,6 @@ data MindInput t = MindInput {
 -- | Peform decision making, the resulted dynamic is sampled at simulation
 -- speed to make turn based execution.
 mind :: MonadGame t m => MindInput t -> m (Dynamic t PlayerAction)
-mind _ = pure $ pure PlayerMove
+mind MindInput{..} = foldDynM genRandAction PlayerDoNothing mindLastAction
+  where
+    genRandAction _ _ = liftIO $ uniform $ PlayerDoNothing : PlayerMove : (PlayerRot <$> [PlayerRotLeft, PlayerRotRight])

@@ -29,7 +29,7 @@ playRound roundNumber = mdo
     mh = 40
   tickE <- tickEvery 0.5
   PlayerOutputs{..} <- runPlayer PlayerConfig {
-      playerMaxHunger = 10
+      playerMaxHunger = 30
     , playerFoodEaten = mapPlayerConsume
     , playerInitPosition = (mw `div` 2, mh `div` 2)
     , playerInitRotation = DirUp
