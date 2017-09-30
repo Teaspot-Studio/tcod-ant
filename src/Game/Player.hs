@@ -81,6 +81,7 @@ runPlayer PlayerConfig{..} = mdo
     , mindFoodSense = playerFoodSense
     , mindHunger = hunger
     , mindFoodEaten = playerFoodEaten
+    , mindLastAction = current actionD `tag` playerTurn
     }
   let actionD = do
         a <- mindAction

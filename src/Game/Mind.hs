@@ -46,10 +46,11 @@ data PlayerAction = PlayerMove | PlayerRot PlayerRotation | PlayerDoNothing
 
 -- | Which data is avaliable for player for decision making
 data MindInput t = MindInput {
-  mindBlocked   :: Dynamic t Bool -- ^ Cannot move forward
-, mindFoodSense :: Dynamic t Bool -- ^ Food is in front of body
-, mindHunger    :: Dynamic t Int -- ^ Hunger level
-, mindFoodEaten :: Event t Int -- ^ Food consumed
+  mindBlocked    :: Dynamic t Bool -- ^ Cannot move forward
+, mindFoodSense  :: Dynamic t Bool -- ^ Food is in front of body
+, mindHunger     :: Dynamic t Int -- ^ Hunger level
+, mindFoodEaten  :: Event t Int -- ^ Food consumed
+, mindLastAction :: Event t PlayerAction -- ^ Last player action
 }
 
 -- | Peform decision making, the resulted dynamic is sampled at simulation
