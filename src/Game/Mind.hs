@@ -58,4 +58,4 @@ data MindInput t = MindInput {
 mind :: MonadGame t m => MindInput t -> m (Dynamic t PlayerAction)
 mind MindInput{..} = foldDynM genRandAction PlayerDoNothing mindLastAction
   where
-    genRandAction _ _ = liftIO $ uniform $ PlayerDoNothing : PlayerMove : (PlayerRot <$> [PlayerRotLeft, PlayerRotRight])
+    genRandAction _ _ = liftIO $ uniform $ PlayerMove : (PlayerRot <$> [PlayerRotLeft, PlayerRotRight])
